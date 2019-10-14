@@ -1,0 +1,40 @@
+[
+    {
+        "name": "dpods/plaid-api-php-client",
+        "version": "0.5.0",
+        "version_normalized": "0.5.0.0",
+        "source": {
+            "type": "git",
+            "url": "https://github.com/dpods/plaid-api-php-client.git",
+            "reference": "1c3da929ef87ef96914bd554567510bd32bc6f1d"
+        },
+        "dist": {
+            "type": "zip",
+            "url": "https://api.github.com/repos/dpods/plaid-api-php-client/zipball/1c3da929ef87ef96914bd554567510bd32bc6f1d",
+            "reference": "1c3da929ef87ef96914bd554567510bd32bc6f1d",
+            "shasum": ""
+        },
+        "require": {
+            "php": ">=5.3.0"
+        },
+        "time": "2019-04-16T03:24:10+00:00",
+        "type": "library",
+        "installation-source": "dist",
+        "autoload": {
+            "psr-4": {
+                "Plaid\\": "src/"
+            }
+        },
+        "notification-url": "https://packagist.org/downloads/",
+        "license": [
+            "MIT"
+        ],
+        "authors": [
+            {
+                "name": "David Glassanos",
+                "email": "david.glassanos@gmail.com"
+            }
+        ],
+        "description": "PHP API Client for Plaid.com"
+    }
+]

@@ -1,0 +1,5 @@
+{
+    "require": {
+        "dpods/plaid-api-php-client": "^0.5.0"
+    }
+}
