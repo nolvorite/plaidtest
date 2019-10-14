@@ -103,7 +103,7 @@
           console.log(response);
           //updateTransactionDisplay(response.transactions);   
           $('#modal_def').modal('toggle');
-      }//,"json"
+      },"json"
       );
 
   });

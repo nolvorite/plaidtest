@@ -97,9 +97,7 @@
 		'end_date' => '2019-08-01',
 	];
 
-	if(isset($_GET['account_id'])){
-		$properties3['options'] = ['account_ids' => [$_GET['account_id']]];
-	}
+	
 
 
 	$properties3 = json_encode($properties3);
@@ -126,6 +124,17 @@
 	}else{
 		$result = json_decode($result);
 		$result = (array) $result;
+
+		$transactions = $result['transactions'];
+		$result['transactions'] = [];
+
+		if(isset($_GET['account_id'])){
+			for($i = 0; $i < count($transactions); $i++){
+				if($transactions[$i]->account_id === $_GET['account_id']){
+					$result['transactions'][count($result['transactions'])] = $transactions[$i];
+				}
+			}
+		}
 
 		echo json_encode($result);
 	}
