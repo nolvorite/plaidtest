@@ -1,33 +1,20 @@
 <?php
 
-	require __DIR__ . '/vendor/autoload.php';
 
-	use Plaid\Client;
-	use Plaid\PlaidException;
-	use Plaid\Requester;
+	$dbConnection = mysqli_connect("localhost","root","","plaidtest");
+
+	//INSERT INTO `transactions` (`transaction_id`, `card_id`, `user_id`, `category`, `date_posted`, `date_transacted`, `description`, `transaction_type`, `amount`) VALUES (NULL, '', '', NULL, NULL, NULL, NULL, NULL, NULL);
+
+	//INSERT INTO `cards` (`card_id`, `account_id`, `balance`, `available`, `current`, `limits`, `last_updated`) VALUES (NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+
 
 	if(isset($_POST['publicToken'])){
 
-		$clientId = '5d95f5c8c08af900131e573c';
-		$secret = 'aa4848a29c00fb894ffa43b43874d3';
-		$publicKey = 'a098c6bb0a982318837f9c7018573a';
-		$publicToken = $_POST['publicToken'];
+		require("pt1.php");
 
-		// Available environments are 'sandbox', 'development', and 'production'
-		$client = new Client($clientId, $secret, $publicKey, 'development');
+		//get credit card only
+		
 
-		$publicToken = $client->item()->publicToken()->exchange($publicToken,$clientId,$secret);
-
-		if(isset($_GET['type'])){
-			switch($_GET['type']){
-				case "transactions":
-					$response = $client->transactions()->get($publicToken, '2018-01-01', '2018-01-31');
-					var_dump($response);
-				break;
-			}
-		}
 	}
-
-
 
 ?>

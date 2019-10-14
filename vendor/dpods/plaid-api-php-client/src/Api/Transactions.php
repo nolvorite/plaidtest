@@ -14,6 +14,8 @@ class Transactions extends Api
     public function get($accessToken,
                         $startDate,
                         $endDate,
+                        $secret,
+                        $clientId,
                         $options = [],
                         $accountIds = null,
                         $count = null,
@@ -39,6 +41,8 @@ class Transactions extends Api
             'start_date' => $startDate,
             'end_date' => $endDate,
             'options' => $optionsObj,
+            'secret' => $secret,
+            'client_id' => $clientId
         ]);
     }
 

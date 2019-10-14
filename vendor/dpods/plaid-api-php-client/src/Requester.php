@@ -8,7 +8,10 @@ class Requester
     {
         try {
             $jsonResponse = $this->httpRequest('POST', $url, $data, $timeout, $apiVersion);
+
+            var_dump($jsonResponse);
             $response = ($autoDecode) ? json_decode($jsonResponse, true) : $jsonResponse;
+            var_dump("it went here",$response,$url,$data);
         } catch (\Exception $e) {
             throw PlaidException::fromResponse([
                 'error_message' => $e->getMessage(),
@@ -16,6 +19,7 @@ class Requester
                 'error_code' => 'INTERNAL_SERVER_ERROR',
                 'display_message' => null,
             ]);
+            var_dump("it went here");
         }
 
         if (array_key_exists('error_type', $response)) {
