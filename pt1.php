@@ -101,7 +101,6 @@
 		$properties3['options'] = ['account_ids' => [$_GET['account_id']]];
 	}
 
-	var_dump($_GET['account_id']);
 
 	$properties3 = json_encode($properties3);
 
