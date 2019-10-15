@@ -120,20 +120,24 @@
 	$result = curl_exec($ch2);
 
 	if(!$result){
-		var_dump(json_decode(curl_error($ch2)));
+		echo json_encode(curl_error($ch2));
 	}else{
 		$result = json_decode($result);
 		$result = (array) $result;
 
 		$transactions = $result['transactions'];
-		$result['transactions'] = [];
+		
 
-		if(isset($_GET['account_id'])){
+		if(isset($_GET['official_name'])){
+			$result['transactions'] = [];
+			$result['official_name'] = $_GET['official_name'];
+			$result['transaction_truecount'] = count($transactions);
 			for($i = 0; $i < count($transactions); $i++){
-				if($transactions[$i]->account_id === $_GET['account_id']){
+				if($transactions[$i]->official_name === $_GET['official_name']){
 					$result['transactions'][count($result['transactions'])] = $transactions[$i];
 				}
 			}
+			$result['total_transactions'] = count($result['transactions']);
 		}
 
 		echo json_encode($result);

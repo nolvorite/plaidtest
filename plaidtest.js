@@ -28,8 +28,40 @@
       }
   }
 
-  function getListOfCards(data){
+  function loadCards(){
+      $.post("fetch.php?type=transactions",{
+          publicToken: publicToken,
+          metadata: metaData
+      },function(response){
+          console.log(response);
+          $("#modal_title").html("Select a credit card...");
+          $("#modal_text").html("<div id='cc_selection'></div>");
+          for(i = 0; i < response.accounts.length; i++){
+              if(response.accounts[i].subtype === "credit card"){
+                  $("#cc_selection").append('<a href="" official_name="'+response.accounts[i].official_name+'">'+response.accounts[i].official_name+'</a>')
+              }
+          }
+          console.log(response);
+          
+      }, "json"
+      );
+  }
 
+  function loadCardData(officialName){
+      $.post("fetch.php?type=transactions&official_name="+officialName,{
+          publicToken: publicToken,
+          metadata: metaData
+      },function(response){
+          console.log(response);
+          if(response.total_transactions === response.transaction_truecount && response.total_transactions > 0){
+              updateTransactionDisplay(response.transactions);   
+              $('#modal_def').modal('toggle');
+          }else{
+              console.log("reload");
+              loadCardData(officialName);
+          }
+      },"json"
+      );
   }
 
   var handler = Plaid.create({
@@ -92,19 +124,10 @@
     handler.open();
   });
 
-  $("body").on('click','#cc_selection a[id_sel]',function(event){
+  $("body").on('click','#cc_selection a[official_name]',function(event){
       event.preventDefault();
-      accountId = $(this).attr("id_sel");
-
-      $.post("fetch.php?type=transactions&account_id="+accountId,{
-          publicToken: publicToken,
-          metadata: metaData
-      },function(response){
-          console.log(response);
-          //updateTransactionDisplay(response.transactions);   
-          $('#modal_def').modal('toggle');
-      },"json"
-      );
+      officialName = $(this).attr("official_name");
+      loadCardData(officialName); 
 
   });
 
@@ -114,21 +137,7 @@
         keyboard: false
       });
       $("#modal_title").html("Loading...");
-      $.post("fetch.php?type=transactions",{
-          publicToken: publicToken,
-          metadata: metaData
-      },function(response){
-          console.log(response);
-          $("#modal_title").html("Select a credit card...");
-          $("#modal_text").html("<div id='cc_selection'></div>");
-          for(i = 0; i < response.accounts.length; i++){
-              if(response.accounts[i].subtype === "credit card"){
-                  $("#cc_selection").append('<a href="" id_sel="'+response.accounts[i].account_id+'">'+response.accounts[i].official_name+'</a>')
-              }
-          }
-          console.log(response);
-          //updateTransactionDisplay(response.transactions);
-      }, "json");
+      loadCards();
   });
 
 
