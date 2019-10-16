@@ -13,6 +13,38 @@
 
 	$auth1 = json_encode($properties);
 
+	function getInstitution($institutionId){
+
+		global $publicKey;
+
+		$data = json_encode(['public_key' => $publicKey, 'institution_id' => $institutionId]);
+		$ch3 = curl_init('https://sandbox.plaid.com/institutions/get_by_id');
+		curl_setopt($ch3, CURLOPT_SSL_VERIFYHOST, 0); //DEVELOPMENT ONLY
+		curl_setopt($ch3, CURLOPT_SSL_VERIFYPEER, 0); //DEVELOPMENT ONLY
+		curl_setopt($ch3, CURLOPT_RETURNTRANSFER, true);
+		curl_setopt($ch3, CURLINFO_HEADER_OUT, true);
+		curl_setopt($ch3, CURLOPT_POST, true);
+		curl_setopt($ch3, CURLOPT_POSTFIELDS, $data);
+		curl_setopt($ch3, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		
+		 
+		// Submit the POST request
+		$result = curl_exec($ch3);
+
+		if(!$result){
+			echo json_encode(curl_error($ch3));
+		}else{
+			$result = json_decode($result);
+			$result = (array) $result;
+
+			$transactions = $result['transactions'];
+			$institution = $result;
+		}
+
+		return $result;
+		
+	}
+
 	
 
 	// Prepare new cURL resource
@@ -97,7 +129,6 @@
 		'end_date' => '2019-08-01',
 	];
 
-	
 
 
 	$properties3 = json_encode($properties3);
@@ -124,21 +155,52 @@
 	}else{
 		$result = json_decode($result);
 		$result = (array) $result;
-
-		$transactions = $result['transactions'];
 		
 
 		if(isset($_GET['official_name'])){
 			$result['transactions'] = [];
 			$result['official_name'] = $_GET['official_name'];
-			$result['transaction_truecount'] = count($transactions);
-			for($i = 0; $i < count($transactions); $i++){
-				if($transactions[$i]->official_name === $_GET['official_name']){
-					$result['transactions'][count($result['transactions'])] = $transactions[$i];
+
+			foreach($result['accounts'] as $account){
+				if($account->official_name === $_GET['official_name']){
+					$accountId = $account->account_id;
 				}
 			}
-			$result['total_transactions'] = count($result['transactions']);
-		}
+
+			$properties3 = [
+				'client_id' => $clientId,
+				'secret' => $secret,
+				'access_token' => $accessTokenData['access_token'],
+				'start_date' => '2019-01-01',
+				'end_date' => '2019-08-01',
+				'options' => ['account_id' => [$accountId]]
+			];
+
+
+
+			$properties3 = json_encode($properties3);
+
+			// Prepare new cURL resource
+			$ch3 = curl_init('https://sandbox.plaid.com/transactions/get');
+			curl_setopt($ch3, CURLOPT_SSL_VERIFYHOST, 0); //DEVELOPMENT ONLY
+			curl_setopt($ch3, CURLOPT_SSL_VERIFYPEER, 0); //DEVELOPMENT ONLY
+			curl_setopt($ch3, CURLOPT_RETURNTRANSFER, true);
+			curl_setopt($ch3, CURLINFO_HEADER_OUT, true);
+			curl_setopt($ch3, CURLOPT_POST, true);
+			curl_setopt($ch3, CURLOPT_POSTFIELDS, $properties3);
+			 
+			// Set HTTP Header for POST request 
+			curl_setopt($ch3, CURLOPT_HTTPHEADER, array(
+			    'Content-Type: application/json'));
+
+			$result = curl_exec($ch3);
+
+			if(!$result){
+				echo json_encode(curl_error($ch3));
+			}else{
+				$result = json_decode($result);
+				$result = (array) $result;		
+			}
 
 		echo json_encode($result);
 	}

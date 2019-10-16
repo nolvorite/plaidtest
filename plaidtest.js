@@ -11,21 +11,26 @@
                 </tr>*/
 
   function updateTransactionDisplay(data){
-      for(i = 0; i < data.length; i++){
-          typee = data[i].amount < 0 ? "SALE" : "RETURN";
-          datee = data[i].date;
-          datee2 = data[i].date;
-          name = data[i].name;
-          amount = data[i].amount;
-          $("#transactions tbody").append('<tr>\
+      clone = $("#table_copy").clone();
+      clone.removeAttr("id");
+      clone.removeClass("d-none");
+
+      for(i = 0; i < data.transactions.length; i++){
+          typee = data.transactions[i].amount < 0 ? "SALE" : "RETURN";
+          datee = data.transactions[i].date;
+          datee2 = data.transactions[i].date;
+          name = data.transactions[i].name;
+          amount = data.transactions[i].amount;
+          clone.find(".transaction").append('<tr>\
             <td>'+typee+'</td>\
             <td>'+datee+'</td>\
             <td>'+datee2+'</td>\
             <td>'+name+'</td>\
             <td>'+amount+'</td>\
             </tr>');
-
       }
+      clone.find(".btn").html(data.official_name);
+      clone.appendTo("#tables");
   }
 
   function loadCards(){
@@ -34,6 +39,7 @@
           metadata: metaData
       },function(response){
           console.log(response);
+          response = $.parseJSON(response);
           $("#modal_title").html("Select a credit card...");
           $("#modal_text").html("<div id='cc_selection'></div>");
           for(i = 0; i < response.accounts.length; i++){
@@ -42,19 +48,21 @@
               }
           }
           console.log(response);
-          
-      }, "json"
+          $("#link-button").html("Add another card").attr("started","started");
+      }
       );
   }
 
   function loadCardData(officialName){
+
+
       $.post("fetch.php?type=transactions&official_name="+officialName,{
           publicToken: publicToken,
           metadata: metaData
       },function(response){
-          console.log(response);
-          if(response.total_transactions === response.transaction_truecount && response.total_transactions > 0){
-              updateTransactionDisplay(response.transactions);   
+          console.log(response,response.total_transactions,response.transaction_truecount);
+          if((response.total_transactions *.8) <= response.transaction_truecount && response.total_transactions > 0){
+              updateTransactionDisplay(response);   
               $('#modal_def').modal('toggle');
           }else{
               console.log("reload");
@@ -88,8 +96,16 @@
 
       console.log("Logged In Successfully.");
 
-      $("#guest").hide();
-      $("#menu").show();
+      
+
+      if($("#link-button").is("[started]")){
+          $("#import-card-feed").trigger('click');
+      }else{
+          $("#menu").show();
+          
+      }
+
+      
 
 
     },
@@ -124,10 +140,16 @@
     handler.open();
   });
 
+  $("body").on('click','.toggle-btn',function(event){
+    $(this).next('.collapse').collapse('toggle');
+  });
+
+
   $("body").on('click','#cc_selection a[official_name]',function(event){
       event.preventDefault();
       officialName = $(this).attr("official_name");
       loadCardData(officialName); 
+      $("#modal_title").html("Waiting for card data to appear...");
 
   });
 
