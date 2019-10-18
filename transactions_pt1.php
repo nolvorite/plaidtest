@@ -1,5 +1,9 @@
 <?php
 
+	//dummy user
+
+	$_SESSION['userdata'] = ['username' => 'test_user', 'user_id' => 1];
+
 	$clientId = '5d95f5c8c08af900131e573c';
 	$secret = 'aa4848a29c00fb894ffa43b43874d3';
 	$publicKey = 'a098c6bb0a982318837f9c7018573a';
@@ -13,33 +17,37 @@
 
 	$auth1 = json_encode($properties);
 
+	function updateCardInDb($cardData){
+		
+	}
+
 	function getInstitution($institutionId){
 
 		global $publicKey;
 
 		$data = json_encode(['public_key' => $publicKey, 'institution_id' => $institutionId]);
-		$ch3 = curl_init('https://sandbox.plaid.com/institutions/get_by_id');
-		curl_setopt($ch3, CURLOPT_SSL_VERIFYHOST, 0); //DEVELOPMENT ONLY
-		curl_setopt($ch3, CURLOPT_SSL_VERIFYPEER, 0); //DEVELOPMENT ONLY
-		curl_setopt($ch3, CURLOPT_RETURNTRANSFER, true);
-		curl_setopt($ch3, CURLINFO_HEADER_OUT, true);
-		curl_setopt($ch3, CURLOPT_POST, true);
-		curl_setopt($ch3, CURLOPT_POSTFIELDS, $data);
-		curl_setopt($ch3, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+		$ch4 = curl_init('https://sandbox.plaid.com/institutions/get_by_id');
+		curl_setopt($ch4, CURLOPT_SSL_VERIFYHOST, 0); //DEVELOPMENT ONLY
+		curl_setopt($ch4, CURLOPT_SSL_VERIFYPEER, 0); //DEVELOPMENT ONLY
+		curl_setopt($ch4, CURLOPT_RETURNTRANSFER, true);
+		curl_setopt($ch4, CURLINFO_HEADER_OUT, true);
+		curl_setopt($ch4, CURLOPT_POST, true);
+		curl_setopt($ch4, CURLOPT_POSTFIELDS, $data);
+		curl_setopt($ch4, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
 		
 		 
 		// Submit the POST request
-		$result = curl_exec($ch3);
+		$result = curl_exec($ch4);
 
 		if(!$result){
-			echo json_encode(curl_error($ch3));
+			return json_encode(curl_error($ch4));
 		}else{
 			$result = json_decode($result);
 			$result = (array) $result;
-
-			$transactions = $result['transactions'];
 			$institution = $result;
 		}
+
+		//var_dump($result);
 
 		return $result;
 		
@@ -150,20 +158,31 @@
 	// Submit the POST request
 	$result = curl_exec($ch2);
 
+	
+
+
 	if(!$result){
 		echo json_encode(curl_error($ch2));
 	}else{
 		$result = json_decode($result);
 		$result = (array) $result;
+
+		$result['ins_data'] = getInstitution($result['item']->institution_id);
+
+		curl_close($ch2);
+
+
 		
 
 		if(isset($_GET['official_name'])){
+
 			$result['transactions'] = [];
 			$result['official_name'] = $_GET['official_name'];
 
 			foreach($result['accounts'] as $account){
 				if($account->official_name === $_GET['official_name']){
 					$accountId = $account->account_id;
+					$actualAcc = $account;
 				}
 			}
 
@@ -173,9 +192,8 @@
 				'access_token' => $accessTokenData['access_token'],
 				'start_date' => '2019-01-01',
 				'end_date' => '2019-08-01',
-				'options' => ['account_id' => [$accountId]]
+				'options' => ['account_ids' => [$accountId]]
 			];
-
 
 
 			$properties3 = json_encode($properties3);
@@ -200,9 +218,59 @@
 			}else{
 				$result = json_decode($result);
 				$result = (array) $result;		
+				$result['account_id'] = $accountId;
+				$result['official_name'] = $_GET['official_name'];
+
+				$result['ins_data'] = getInstitution($result['item']->institution_id);
+
+				//update card data for use
+
+
+				//add card first
+				$updateCard = submitToDb("cards",[
+					'account_id' => $result['account_id'],
+					'bank' => $result['ins_data']['institution']->name,
+					'user_id' => $_SESSION['userdata']['user_id']
+				]);
+
+				//get latest card data
+
+				$getLatestCard = mysqli_query($dbCon, "SELECT * FROM cards WHERE user_id='".$_SESSION['userdata']['user_id']."' ORDER BY card_id DESC");
+				$cardData = mysqli_fetch_assoc($getLatestCard);
+
+				//then submit transactions
+
+
+				$cardId = $cardData['card_id'];
+				$result['card_id'] = $cardId;
+
+				foreach($result['transactions'] as $key => $trnsct){
+					$trnsct = (array) $trnsct;
+					$result['transactions'][$key]->date_posted = date("Y-m-d");
+					 $submitToData = submitToDb("transactions",
+					 	[
+					 		'card_id' => $cardId,
+					 		'amount' => $trnsct['amount'],
+					 		'category' => json_encode($trnsct['category']),
+					 		'description' => $trnsct['name'],
+					 		'transaction_type' => $trnsct['transaction_type'],
+					 		'date_transacted' => $trnsct['date'],
+					 		'user_id' => $_SESSION['userdata']['user_id'],
+					 		'transaction_id2' => $trnsct['transaction_id']
+					 	]
+					 );
+				}
+				
 			}
 
+		}
+
+		
+
+
 		echo json_encode($result);
+
+
 	}
 
 

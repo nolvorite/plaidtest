@@ -10,15 +10,22 @@
                 <th title="Field #5">Amount</th>
                 </tr>*/
 
+  $.post("fetch.php?type=update_user",{filler: 'true'},
+      function(msg){
+          console.log(msg);
+      }
+  );
+
   function updateTransactionDisplay(data){
       clone = $("#table_copy").clone();
       clone.removeAttr("id");
       clone.removeClass("d-none");
+      clone.attr("card_id",data.card_id);
 
       for(i = 0; i < data.transactions.length; i++){
           typee = data.transactions[i].amount < 0 ? "SALE" : "RETURN";
           datee = data.transactions[i].date;
-          datee2 = data.transactions[i].date;
+          datee2 = data.transactions[i].date_posted;
           name = data.transactions[i].name;
           amount = data.transactions[i].amount;
           clone.find(".transaction").append('<tr>\
@@ -29,7 +36,7 @@
             <td>'+amount+'</td>\
             </tr>');
       }
-      clone.find(".btn").html(data.official_name);
+      clone.find(".btn.toggle-btn").html(data.official_name);
       clone.appendTo("#tables");
   }
 
@@ -45,10 +52,11 @@
           for(i = 0; i < response.accounts.length; i++){
               if(response.accounts[i].subtype === "credit card"){
                   $("#cc_selection").append('<a href="" official_name="'+response.accounts[i].official_name+'">'+response.accounts[i].official_name+'</a>')
+                  $("#link-button").html("Add another card").attr("started","started");
               }
           }
           console.log(response);
-          $("#link-button").html("Add another card").attr("started","started");
+          
       }
       );
   }
@@ -60,15 +68,17 @@
           publicToken: publicToken,
           metadata: metaData
       },function(response){
-          console.log(response,response.total_transactions,response.transaction_truecount);
-          if((response.total_transactions *.8) <= response.transaction_truecount && response.total_transactions > 0){
+          console.log(response);
+          response = $.parseJSON(response);
+          console.log(response,response.total_transactions);
+          if(response.total_transactions > 0){
               updateTransactionDisplay(response);   
               $('#modal_def').modal('toggle');
           }else{
               console.log("reload");
               loadCardData(officialName);
           }
-      },"json"
+      }
       );
   }
 
@@ -90,12 +100,17 @@
       // user selected and the account ID or IDs, if the
       // Select Account view is enabled.
 
+      console.log("Logged into bank account successfully.",metadata);
+
+      $("#bank_info").html("Currently logged into your "+metadata.institution.name+" account.");
+
+      $.post("fetch.php?type=session_log",{institution: metadata.institution},function(alert){
+          console.log("Logged in bank session.")
+      });
+
       publicToken = public_token;
 
       metaData = metadata;
-
-      console.log("Logged In Successfully.");
-
       
 
       if($("#link-button").is("[started]")){

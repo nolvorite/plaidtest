@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: 127.0.0.1
--- Generation Time: Oct 16, 2019 at 04:49 PM
+-- Generation Time: Oct 18, 2019 at 05:09 PM
 -- Server version: 10.1.19-MariaDB
 -- PHP Version: 5.6.28
 
@@ -19,6 +19,8 @@ SET time_zone = "+00:00";
 --
 -- Database: `plaidtest`
 --
+CREATE DATABASE IF NOT EXISTS `plaidtest` DEFAULT CHARACTER SET latin1 COLLATE latin1_swedish_ci;
+USE `plaidtest`;
 
 -- --------------------------------------------------------
 
@@ -35,7 +37,8 @@ CREATE TABLE `cards` (
   `limits` float DEFAULT NULL,
   `last_updated` date DEFAULT NULL,
   `user_id` int(11) NOT NULL,
-  `bank` varchar(30) NOT NULL
+  `bank` varchar(30) NOT NULL,
+  `nickname` varchar(60) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 -- --------------------------------------------------------
@@ -49,19 +52,13 @@ CREATE TABLE `transactions` (
   `card_id` int(11) NOT NULL,
   `user_id` int(11) NOT NULL,
   `category` varchar(200) DEFAULT NULL,
-  `date_posted` date DEFAULT NULL,
+  `date_posted` datetime DEFAULT CURRENT_TIMESTAMP,
   `date_transacted` date DEFAULT NULL,
   `description` varchar(100) DEFAULT NULL,
   `transaction_type` varchar(25) DEFAULT NULL,
-  `amount` float DEFAULT NULL
+  `amount` float DEFAULT NULL,
+  `transaction_id2` varchar(100) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-
---
--- Dumping data for table `transactions`
---
-
-INSERT INTO `transactions` (`transaction_id`, `card_id`, `user_id`, `category`, `date_posted`, `date_transacted`, `description`, `transaction_type`, `amount`) VALUES
-(1, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -75,6 +72,13 @@ CREATE TABLE `users` (
   `account_type` int(1) DEFAULT NULL,
   `last_active` date DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+--
+-- Dumping data for table `users`
+--
+
+INSERT INTO `users` (`user_id`, `username`, `account_type`, `last_active`) VALUES
+(1, 'test_user', 3, '2019-10-18');
 
 --
 -- Indexes for dumped tables
@@ -106,17 +110,17 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `cards`
 --
 ALTER TABLE `cards`
-  MODIFY `card_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `card_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 --
 -- AUTO_INCREMENT for table `transactions`
 --
 ALTER TABLE `transactions`
-  MODIFY `transaction_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `transaction_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=174;
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;

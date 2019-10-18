@@ -59,8 +59,8 @@
 
         <div class="col-sm-12">
 
-            <div id="guest">
-                <button id="link-button" class="btn btn-primary">Select a bank...</button>
+            <div id="bank_panel">
+                <button id="link-button" class="btn btn-primary">Select a bank...</button><span id="bank_info" class="alert alert-success"></span>
             </div>
 
             <div id="menu">
@@ -72,6 +72,17 @@
                     Credit Card Name
                 </button>
                 <div class="collapse">
+                    <div class="card-menu">
+                        <button class="btn btn-warning nickname-btn" type="button">
+                            Manage Nickname
+                        </button>
+                        <button class="btn btn-danger delete-card-feed-btn" type="button">
+                            Delete Card Feed
+                        </button>
+                        <button class="btn btn-dark reconnect-card-feed-btn" type="button">
+                            Re-Connect
+                        </button>
+                    </div>
                     <div class="table-canvas">
                         <table class="table table-striped transaction">
                             <thead><tr><th title="Field #1">Type</th>

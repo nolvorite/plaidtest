@@ -2,6 +2,12 @@
 
     $dbCon = mysqli_connect("localhost","root","","plaidtest");
 
+    function filterQ($value){
+        global $dbCon;
+        return mysqli_real_escape_string($dbCon, $value);
+
+    }
+
     function submitToDb($table,$array){
         global $dbCon; //replace dbCon with PHP variable containing mysqli connection (mysqli_connect)
         /*
