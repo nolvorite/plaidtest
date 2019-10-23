@@ -2,8 +2,6 @@
 
 	//dummy user
 
-	$_SESSION['userdata'] = ['username' => 'test_user', 'user_id' => 1];
-
 	$clientId = '5d95f5c8c08af900131e573c';
 	$secret = 'aa4848a29c00fb894ffa43b43874d3';
 	$publicKey = 'a098c6bb0a982318837f9c7018573a';
@@ -16,6 +14,13 @@
 	];
 
 	$auth1 = json_encode($properties);
+
+	function getCards(){
+		global $dbCon;
+		$userId = $_SESSION['userdata']['user_id'];
+		$getCards = mysqli_query($dbCon, "SELECT * FROM cards WHERE user_id = ".$userId);
+		return mysqli_fetch_all($getCards, MYSQLI_ASSOC);
+	}
 
 	function updateCardInDb($cardData){
 		
@@ -53,6 +58,7 @@
 		
 	}
 
+	
 	
 
 	// Prepare new cURL resource
@@ -99,7 +105,6 @@
 	//
 	//get data
 	//
-
  
 	// Prepare new cURL resource
 	$ch = curl_init('https://sandbox.plaid.com/item/public_token/exchange');
@@ -134,7 +139,7 @@
 		'secret' => $secret,
 		'access_token' => $accessTokenData['access_token'],
 		'start_date' => '2019-01-01',
-		'end_date' => '2019-08-01',
+		'end_date' => '2019-08-01'
 	];
 
 
@@ -174,7 +179,13 @@
 
 		
 
-		if(isset($_GET['official_name'])){
+		if(isset($_GET['official_name'])){ //adding card to data
+
+			//get current cards first
+
+			$cardList = getCards();
+
+
 
 			$result['transactions'] = [];
 			$result['official_name'] = $_GET['official_name'];
@@ -216,6 +227,9 @@
 			if(!$result){
 				echo json_encode(curl_error($ch3));
 			}else{
+
+				
+
 				$result = json_decode($result);
 				$result = (array) $result;		
 				$result['account_id'] = $accountId;
@@ -223,47 +237,80 @@
 
 				$result['ins_data'] = getInstitution($result['item']->institution_id);
 
-				//update card data for use
+				//search if card is already in the list
 
+				$cardToCheck = $result['accounts'][0];
 
-				//add card first
-				$updateCard = submitToDb("cards",[
-					'account_id' => $result['account_id'],
-					'bank' => $result['ins_data']['institution']->name,
-					'user_id' => $_SESSION['userdata']['user_id']
-				]);
+				$alreadySelected = false;
 
-				//get latest card data
-
-				$getLatestCard = mysqli_query($dbCon, "SELECT * FROM cards WHERE user_id='".$_SESSION['userdata']['user_id']."' ORDER BY card_id DESC");
-				$cardData = mysqli_fetch_assoc($getLatestCard);
-
-				//then submit transactions
-
-
-				$cardId = $cardData['card_id'];
-				$result['card_id'] = $cardId;
-
-				foreach($result['transactions'] as $key => $trnsct){
-					$trnsct = (array) $trnsct;
-					$result['transactions'][$key]->date_posted = date("Y-m-d");
-					 $submitToData = submitToDb("transactions",
-					 	[
-					 		'card_id' => $cardId,
-					 		'amount' => $trnsct['amount'],
-					 		'category' => json_encode($trnsct['category']),
-					 		'description' => $trnsct['name'],
-					 		'transaction_type' => $trnsct['transaction_type'],
-					 		'date_transacted' => $trnsct['date'],
-					 		'user_id' => $_SESSION['userdata']['user_id'],
-					 		'transaction_id2' => $trnsct['transaction_id']
-					 	]
-					 );
+				foreach($cardList as $card){
+					//var_dump($card);
+					if($cardToCheck->official_name === $card['official_name'] && $cardToCheck->name === $card['name']){ //same user_id, official name and same card. This is going to be our criteria for a "same card" for now, might be changed later
+						$alreadySelected = true;
+					}
 				}
-				
-			}
 
+				if($alreadySelected){
+					$result = ['error' => 'Card is already in your card feed. Please select another one.'];
+				}else{
+					//update card data for use
+
+
+					//add card first
+					$updateCard = submitToDb("cards",[
+						'account_id' => $result['account_id'],
+						'bank' => $result['ins_data']['institution']->name,
+						'user_id' => $_SESSION['userdata']['user_id'],
+						'official_name' => $cardToCheck->official_name,
+						'name' => $cardToCheck->name
+					]);
+
+					//get latest card data
+
+					$getLatestCard = mysqli_query($dbCon, "SELECT * FROM cards WHERE user_id='".$_SESSION['userdata']['user_id']."' ORDER BY card_id DESC");
+					$cardData = mysqli_fetch_assoc($getLatestCard);
+
+					//then submit transactions
+
+
+					$cardId = $cardData['card_id'];
+					$result['card_id'] = $cardId;
+
+					$cardName = $cardToCheck->official_name;
+
+
+					$htmlAppend = tableAppend($result,$cardName);
+					
+                 
+
+					foreach($result['transactions'] as $key => $trnsct){
+						$trnsct = (array) $trnsct;
+						$result['transactions'][$key]->date_posted = date("Y-m-d");
+
+						
+
+						 $submitToData = submitToDb("transactions",
+						 	[
+						 		'card_id' => $cardId,
+						 		'amount' => $trnsct['amount'],
+						 		'category' => json_encode($trnsct['category']),
+						 		'description' => $trnsct['name'],
+						 		'transaction_type' => $trnsct['transaction_type'],
+						 		'date_transacted' => $trnsct['date'],
+						 		'user_id' => $_SESSION['userdata']['user_id'],
+						 		'transaction_id2' => $trnsct['transaction_id']
+						 	]
+						 );
+					}
+
+					
+				$result['html'] = $htmlAppend;
+				}
+
+			}
 		}
+	
+				
 
 		
 

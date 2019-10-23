@@ -1,3 +1,35 @@
+<?php
+    ob_start();
+    session_start();
+
+    require("db.php");
+
+
+    $cardDQ = mysqli_query($dbCon, "SELECT * FROM cards WHERE user_id = ".$_SESSION['userdata']['user_id']."");
+    $cardData = mysqli_fetch_all($cardDQ, MYSQLI_ASSOC);
+    $cards = [];
+    foreach($cardData as $cardz){
+        $cards[$cardz['card_id']] = $cardz;
+    }
+
+    ///////////
+
+    $cardDataHTML = "";
+
+    foreach($cards as $key => $card){
+
+        $transactionsQ = mysqli_query($dbCon, "SELECT * FROM transactions WHERE card_id = $card[card_id] ORDER BY transaction_id DESC");
+        $transactions = mysqli_fetch_all($transactionsQ,MYSQLI_ASSOC);
+        $cards[$key]['transactions'] = $transactions;
+
+        $cardDataHTML .= tableAppend($cards[$key],$card['official_name']);
+
+    }
+
+
+?>
+
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -11,6 +43,7 @@
     <style type="text/css">
         #menu{display:none;}
         .table-canvas{max-height:350px;overflow-y:auto;}
+        #bank_info{    padding: .5rem;    vertical-align: middle;    margin-left: 10px;}
     </style>
 
     <title>Plaid Test</title>
@@ -67,39 +100,9 @@
                 <button id="import-card-feed" class="btn btn-success">Import Card Feed</button>
             </div>
 
-            <div class="d-none table-container" id="table_copy">
-                <button class="btn btn-primary toggle-btn" type="button" data-toggle="collapse">
-                    Credit Card Name
-                </button>
-                <div class="collapse">
-                    <div class="card-menu">
-                        <button class="btn btn-warning nickname-btn" type="button">
-                            Manage Nickname
-                        </button>
-                        <button class="btn btn-danger delete-card-feed-btn" type="button">
-                            Delete Card Feed
-                        </button>
-                        <button class="btn btn-dark reconnect-card-feed-btn" type="button">
-                            Re-Connect
-                        </button>
-                    </div>
-                    <div class="table-canvas">
-                        <table class="table table-striped transaction">
-                            <thead><tr><th title="Field #1">Type</th>
-                            <th title="Field #2">Trans Date</th>
-                            <th title="Field #3">Post Date</th>
-                            <th title="Field #4">Description</th>
-                            <th title="Field #5">Amount</th>
-                            </tr></thead>
-                            <tbody>
-
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+            <div id="tables">
+              <?php echo $cardDataHTML; ?>
             </div>
-
-            <div id="tables"></div>
 
             
         </div>
@@ -122,6 +125,9 @@
           </div>
         </div>
       </div>
+    </div>
+    <div>
+      <?php var_dump($_SESSION); ?>
     </div>
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->

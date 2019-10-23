@@ -10,6 +10,12 @@
 
 	if(isset($_GET['type'])){
 		switch($_GET['type']){
+			case "session_log":
+				$userId = $_SESSION['userdata']['user_id'];
+				$updateUser = mysqli_query("UPDATE users SET public_token_last='".filterQ($publicToken)."'");
+				$_SESSION['institution'] = $_POST['institution'];
+				$_SESSION['public_token'] = $_POST['public_token'];
+			break;
 			case "transactions":
 
 				if(isset($_POST['publicToken'])){

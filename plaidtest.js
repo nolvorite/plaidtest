@@ -17,27 +17,7 @@
   );
 
   function updateTransactionDisplay(data){
-      clone = $("#table_copy").clone();
-      clone.removeAttr("id");
-      clone.removeClass("d-none");
-      clone.attr("card_id",data.card_id);
-
-      for(i = 0; i < data.transactions.length; i++){
-          typee = data.transactions[i].amount < 0 ? "SALE" : "RETURN";
-          datee = data.transactions[i].date;
-          datee2 = data.transactions[i].date_posted;
-          name = data.transactions[i].name;
-          amount = data.transactions[i].amount;
-          clone.find(".transaction").append('<tr>\
-            <td>'+typee+'</td>\
-            <td>'+datee+'</td>\
-            <td>'+datee2+'</td>\
-            <td>'+name+'</td>\
-            <td>'+amount+'</td>\
-            </tr>');
-      }
-      clone.find(".btn.toggle-btn").html(data.official_name);
-      clone.appendTo("#tables");
+      $("#tables").prepend(data.html);
   }
 
   function loadCards(){
@@ -71,12 +51,16 @@
           console.log(response);
           response = $.parseJSON(response);
           console.log(response,response.total_transactions);
-          if(response.total_transactions > 0){
-              updateTransactionDisplay(response);   
-              $('#modal_def').modal('toggle');
-          }else{
-              console.log("reload");
-              loadCardData(officialName);
+          if(typeof response.error !== "undefined"){
+              alert(response.error);
+          }else {
+              if(response.total_transactions > 0){
+                  updateTransactionDisplay(response);   
+                  $('#modal_def').modal('toggle');
+              }else{
+                  console.log("reload");
+                  loadCardData(officialName);
+              }
           }
       }
       );
@@ -104,7 +88,7 @@
 
       $("#bank_info").html("Currently logged into your "+metadata.institution.name+" account.");
 
-      $.post("fetch.php?type=session_log",{institution: metadata.institution},function(alert){
+      $.post("fetch.php?type=session_log",{institution: metadata.institution, public_token: public_token},function(alert){
           console.log("Logged in bank session.")
       });
 
@@ -119,9 +103,6 @@
           $("#menu").show();
           
       }
-
-      
-
 
     },
     onExit: function(err, metadata) {
@@ -168,7 +149,7 @@
 
   });
 
-  $('#import-card-feed').on('click',function(e){
+  $('body').on('click','#import-card-feed',function(e){
       $('#modal_def').modal({
         backdrop: 'static',
         keyboard: false
@@ -177,6 +158,24 @@
       loadCards();
   });
 
+  $("body").on('click','.nickname-btn',function(event){
+    $('#modal_def').modal({
+      backdrop: 'static',
+      keyboard: false
+    });
+    $("#modal_text").html("");
+    $("#modal_title").html("Managing Nickname");
 
+  });
+
+  $("body").on('click','.delete-card-feed-btn',function(event){
+    $('#modal_def').modal({
+      backdrop: 'static',
+      keyboard: false
+    });
+    $("#modal_text").html("Are you sure you want to do this? If so, click the \"Confirm\" button below. ");
+    $("#modal_title").html("Delete Card Feed");
+    $("#modal-def .modal-footer").html("<button class='btn btn-danger confirm-deletion'>Confirm</button>")
+  });
 
 })(jQuery);
