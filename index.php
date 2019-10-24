@@ -8,9 +8,19 @@
     $cardDQ = mysqli_query($dbCon, "SELECT * FROM cards WHERE user_id = ".$_SESSION['userdata']['user_id']."");
     $cardData = mysqli_fetch_all($cardDQ, MYSQLI_ASSOC);
     $cards = [];
+    $needsUpdates = false;
+
+    //search all cards, find their date, convert to unix timestamp
+
     foreach($cardData as $cardz){
         $cards[$cardz['card_id']] = $cardz;
+        $lastUpdated = strtotime($cardz['last_updated']);
+        $needsUpdates = (microtime(true) - $lastUpdated >= (60 * 60 * 24)) ? true : $needsUpdates;
     }
+
+    if($needsUpdates){
+        header("Location: update_cards.php");
+    }else {
 
     ///////////
 
@@ -41,7 +51,6 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
 
     <style type="text/css">
-        #menu{display:none;}
         .table-canvas{max-height:350px;overflow-y:auto;}
         #bank_info{    padding: .5rem;    vertical-align: middle;    margin-left: 10px;}
     </style>
@@ -93,10 +102,11 @@
         <div class="col-sm-12">
 
             <div id="bank_panel">
-                <button id="link-button" class="btn btn-primary">Select a bank...</button><span id="bank_info" class="alert alert-success"></span>
+                <button id="link-button" class="btn btn-primary">Select a bank...</button>
+                <?php if(isset($_SESSION['institution'])): ?><span id="bank_info" class="alert alert-success">Currently logged into your <?php echo $_SESSION['institution']['name']; ?> account.</span><?php endif; ?>
             </div>
 
-            <div id="menu">
+            <div id="menu" class="d-none">
                 <button id="import-card-feed" class="btn btn-success">Import Card Feed</button>
             </div>
 
@@ -136,8 +146,18 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
 
     <script src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>
+    <script type="text/javascript">
+        var publicToken = "<?php if(isset($_SESSION['public_token'])){ echo $_SESSION['public_token']; }?>";
+        <?php if(isset($_SESSION['metadata'])){ ?>
+        var metaData = $.parseJSON('<?php echo json_encode($_SESSION['metadata']); ?>');
+        <?php } else { ?>
+        var metaData = {};
+        <?php } ?>
+        console.log(metaData);
+    </script>
     <script type="text/javascript" src="plaidtest.js">
     </script>
 
   </body>
 </html>
+<?php } ?>

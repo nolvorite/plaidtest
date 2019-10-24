@@ -13,6 +13,11 @@
 
     }
 
+    function updateTransactions(){
+        global $dbCon;
+        //get date of last transaction
+    }
+
     function submitToDb($table,$array){
         global $dbCon; //replace dbCon with PHP variable containing mysqli connection (mysqli_connect)
         /*
@@ -50,9 +55,10 @@
     }
 
     function tableAppend($bankData,$cardName){
-        $htmlAppend = '            <div class="table-container">
+        $cardNameDisplay = isset($bankData['nickname']) ? htmlspecialchars($bankData['nickname']) : '('.$bankData["bank"].') '.$cardName;
+        $htmlAppend = '            <div class="table-container" c_id="'.$bankData['card_id'].'">
 <button class="btn btn-primary toggle-btn" type="button" data-toggle="collapse">
-    '.$cardName.'
+    '.$cardNameDisplay.'
 </button>
 <div class="collapse">
     <div class="card-menu">
@@ -60,9 +66,9 @@
             Manage Nickname
         </button>
         <button class="btn btn-danger delete-card-feed-btn" type="button">
-            Delete Card Feed
+            Remove Card Feed
         </button>
-        <button class="btn btn-dark reconnect-card-feed-btn" type="button">
+        <button class="btn btn-dark reconnect-card-feed-btn d-none" type="button">
             Re-Connect
         </button>
     </div>

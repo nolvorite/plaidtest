@@ -236,6 +236,7 @@
 				$result['official_name'] = $_GET['official_name'];
 
 				$result['ins_data'] = getInstitution($result['item']->institution_id);
+				$result['bank'] = $result['ins_data']['institution']->name;
 
 				//search if card is already in the list
 
@@ -245,7 +246,7 @@
 
 				foreach($cardList as $card){
 					//var_dump($card);
-					if($cardToCheck->official_name === $card['official_name'] && $cardToCheck->name === $card['name']){ //same user_id, official name and same card. This is going to be our criteria for a "same card" for now, might be changed later
+					if($cardToCheck->official_name === $card['official_name'] && $result['bank'] === $card['bank']){ //same user_id, official name and same bank. This is going to be our criteria for a "same card" for now, might be changed later
 						$alreadySelected = true;
 					}
 				}

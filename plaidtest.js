@@ -1,7 +1,11 @@
 (function($) {
 
-  var publicToken = "";
-  var metaData = {};
+  
+  
+  var modalMode = "none";
+  const modalSettings = {
+      default_footer: '<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>'
+  };
 
   /*<tr><th title="Field #1">Type</th>
                 <th title="Field #2">Trans Date</th>
@@ -10,14 +14,18 @@
                 <th title="Field #5">Amount</th>
                 </tr>*/
 
-  $.post("fetch.php?type=update_user",{filler: 'true'},
-      function(msg){
-          console.log(msg);
-      }
-  );
+  
 
   function updateTransactionDisplay(data){
       $("#tables").prepend(data.html);
+  }
+
+  function openModal(mode){
+      modalMode = mode;
+      $('#modal_def').modal({
+          backdrop: 'static',
+          keyboard: false
+      });
   }
 
   function loadCards(){
@@ -32,7 +40,7 @@
           for(i = 0; i < response.accounts.length; i++){
               if(response.accounts[i].subtype === "credit card"){
                   $("#cc_selection").append('<a href="" official_name="'+response.accounts[i].official_name+'">'+response.accounts[i].official_name+'</a>')
-                  $("#link-button").html("Add another card").attr("started","started");
+                  
               }
           }
           console.log(response);
@@ -49,7 +57,12 @@
           metadata: metaData
       },function(response){
           console.log(response);
-          response = $.parseJSON(response);
+          try {
+              response = $.parseJSON(response);
+          } catch (error){
+              console.log("Loading failed. Trying again...");
+              loadCardData(officialName);
+          }
           console.log(response,response.total_transactions);
           if(typeof response.error !== "undefined"){
               alert(response.error);
@@ -86,21 +99,27 @@
 
       console.log("Logged into bank account successfully.",metadata);
 
+      if($("#bank_info").length === 0){
+          $("#link-button").after('<span id="bank_info" class="alert alert-success" />');
+      }
+
       $("#bank_info").html("Currently logged into your "+metadata.institution.name+" account.");
 
-      $.post("fetch.php?type=session_log",{institution: metadata.institution, public_token: public_token},function(alert){
+      metaData = metadata;
+
+      $.post("fetch.php?type=session_log",{institution: metadata.institution, public_token: public_token,metadata: metaData},function(alert){
           console.log("Logged in bank session.")
       });
 
       publicToken = public_token;
 
-      metaData = metadata;
+      
       
 
       if($("#link-button").is("[started]")){
-          $("#import-card-feed").trigger('click');
+
       }else{
-          $("#menu").show();
+          $("#menu").removeClass("d-none");
           
       }
 
@@ -132,6 +151,53 @@
 
   //console.log(metaData);
 
+  //delegate all modal events that trigger based on modal mode here
+
+  $(document).ready(function(){
+
+      //everything to update once the page is finished loading
+
+      $.post("fetch.php?type=update_user",{filler: 'true'},
+          function(msg){
+              console.log(msg);
+          }
+      );
+
+      if(publicToken !== ""){
+          $("#menu").removeClass("d-none");
+      }
+
+  });
+
+  $('#modal_def').on('hide.bs.modal', function (e) {
+      switch(modalMode){
+          case "Delete Card Feed":
+          case "Manage Card Feed":
+              $("#modal_def .modal_footer").html(modalSettings.default_footer);
+          break;
+      }
+  });
+
+  $('#modal_def').on('show.bs.modal', function (e) {
+      switch(modalMode){
+          case "Import Card Feed":
+              $("#modal_title").html("Loading...");
+              loadCards();
+          break;
+          case "Delete Card Feed":
+              $("#modal_text").html("Are you sure you want to do this? If so, click the \"Confirm\" button below. ");
+              $("#modal_title").html("Delete Card Feed");
+              $("#modal_def .modal-footer").html("<button c_id='"+cardId+" 'class='btn btn-danger confirm-deletion'>Confirm</button>")
+          break;
+          case "Manage Nickname":
+              nickname = $(".table-container").find(".toggle-btn").text().replace(/^[\t ]{1,}(.+)/gm,"$1");
+              $("#modal_text").html("<input class='form-control' id='nicknamee' placeholder='Input nickname here...' value='"+nickname+"'>");
+              $("#modal_def .modal-footer").append("<button class='btn btn-primary confirm-manage-nickname' c_id='"+cardId+"'>Edit Nickname</button>");
+              $("#modal_title").html("Managing Nickname");
+          break;
+      }
+  });
+
   $('#link-button').on('click', function(e) {
     handler.open();
   });
@@ -150,32 +216,53 @@
   });
 
   $('body').on('click','#import-card-feed',function(e){
-      $('#modal_def').modal({
-        backdrop: 'static',
-        keyboard: false
-      });
-      $("#modal_title").html("Loading...");
-      loadCards();
+      openModal("Import Card Feed");
   });
 
   $("body").on('click','.nickname-btn',function(event){
-    $('#modal_def').modal({
-      backdrop: 'static',
-      keyboard: false
-    });
-    $("#modal_text").html("");
-    $("#modal_title").html("Managing Nickname");
-
+      cardId = $(this).parents(".table-container").attr("c_id");
+      openModal("Manage Nickname");
   });
 
   $("body").on('click','.delete-card-feed-btn',function(event){
-    $('#modal_def').modal({
-      backdrop: 'static',
-      keyboard: false
-    });
-    $("#modal_text").html("Are you sure you want to do this? If so, click the \"Confirm\" button below. ");
-    $("#modal_title").html("Delete Card Feed");
-    $("#modal-def .modal-footer").html("<button class='btn btn-danger confirm-deletion'>Confirm</button>")
+      cardId = $(this).parents(".table-container").attr("c_id");
+      openModal("Delete Card Feed");
   });
+
+  $("body").on("click",".confirm-manage-nickname,.confirm-deletion",function(event){
+      card_id = $(this).attr("c_id");
+      type = $(this).is(".confirm-manage-nickname") ? "confirm_nickname" : "confirm_deletion";
+      data = {card_id: card_id};
+      if($(this).is(".confirm-manage-nickname")){
+          data.nickname = $("#nicknamee").val();
+      }
+      $.post("fetch.php?type="+type,data,function(response){
+          console.log(response);
+          response = $.parseJSON(response);
+          console.log(response);
+          if(typeof response.error === "undefined"){
+              switch(type){
+                  case "confirm_nickname":
+                      $(".table-container[c_id="+response.card_id+"] .toggle-btn").html(response.nickname);
+                      alert(response.notice);
+                      setTimeout(function(){
+                          $("#modal_def").modal('toggle');
+                      },600);
+                  break;
+                  case "confirm_deletion":
+                      alert(response.notice);
+                      $("#modal_def").modal('toggle');
+                      $(".table-container[c_id="+response.card_id+"]").fadeOut(700);
+                  break;
+              }
+          }else{
+              alert("Error doing action. Error: " +response.error);
+          }
+          
+      });
+      
+  });
+
+
 
 })(jQuery);
