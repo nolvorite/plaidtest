@@ -18,8 +18,8 @@
         $needsUpdates = (microtime(true) - $lastUpdated >= (60 * 60 * 24)) ? true : $needsUpdates;
     }
 
-    if($needsUpdates){
-        header("Location: update_cards.php");
+    if($needsUpdates){ 
+        //header("Location: update_cards.php");
     }else {
 
     ///////////
@@ -28,7 +28,7 @@
 
     foreach($cards as $key => $card){
 
-        $transactionsQ = mysqli_query($dbCon, "SELECT * FROM transactions WHERE card_id = $card[card_id] ORDER BY transaction_id DESC");
+        $transactionsQ = mysqli_query($dbCon, "SELECT * FROM transactions WHERE card_id = $card[card_id] ORDER BY date_transacted DESC");
         $transactions = mysqli_fetch_all($transactionsQ,MYSQLI_ASSOC);
         $cards[$key]['transactions'] = $transactions;
 

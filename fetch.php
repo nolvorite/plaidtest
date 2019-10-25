@@ -63,7 +63,7 @@
 			case "transactions":
 
 				if(isset($_POST['publicToken'])){
-					require("transactions_pt1.php");
+					require("transactions.php");
 				}
 
 			break;
