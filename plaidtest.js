@@ -7,6 +7,8 @@
       default_footer: '<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>'
   };
 
+  var preventMode = false;
+
   /*<tr><th title="Field #1">Type</th>
                 <th title="Field #2">Trans Date</th>
                 <th title="Field #3">Post Date</th>
@@ -28,41 +30,66 @@
       });
   }
 
+
+  function quickPost(url,data,thingsToDo,dataType = "json", executeInCaseOfError = function(){}){
+      //just a plain POST requester, but with concurrency prevention
+      if(preventMode === false){
+          preventMode = true;
+          $.post(url,data,function(response){
+
+              console.log("before parsing: ", response);
+              if(dataType === "json"){
+                  try {
+                      response = $.parseJSON(response);
+                      console.log("after parsing: ", response);
+                      thingsToDo(response);
+                  } catch(error){
+                      console.log("JSON parsing error: " + error);
+                      executeInCaseOfError();
+                  }
+              }else{
+                  thingsToDo(response);
+              }
+              preventMode = false;
+          }
+          );
+      }else{
+          console.log("Response has to finish first.");
+      }
+  }
+
   function loadCards(){
-      $.post("fetch.php?type=transactions",{
+      quickPost("fetch.php?type=transactions",{
           publicToken: publicToken,
           metadata: metaData
       },function(response){
-          console.log(response);
-          response = $.parseJSON(response);
           $("#modal_title").html("Select a credit card...");
           $("#modal_text").html("<div id='cc_selection'></div>");
           for(i = 0; i < response.accounts.length; i++){
               if(response.accounts[i].subtype === "credit card"){
                   $("#cc_selection").append('<a href="" official_name="'+response.accounts[i].official_name+'">'+response.accounts[i].official_name+'</a>')
-                  
               }
           }
           console.log(response);
+      });
+      // $.post("fetch.php?type=transactions",{
+      //     publicToken: publicToken,
+      //     metadata: metaData
+      // },function(response){
+      //     console.log(response);
+      //     response = $.parseJSON(response);
           
-      }
-      );
+          
+      // }
+      // );
   }
 
   function loadCardData(officialName){
 
-
-      $.post("fetch.php?type=transactions&official_name="+officialName,{
+      quickPost("fetch.php?type=transactions&official_name="+officialName,{
           publicToken: publicToken,
           metadata: metaData
-      },function(response){
-          console.log(response);
-          try {
-              response = $.parseJSON(response);
-          } catch (error){
-              console.log("Loading failed. Trying again...");
-              loadCardData(officialName);
-          }
+      }, function(response){
           console.log(response,response.total_transactions);
           if(typeof response.error !== "undefined"){
               alert(response.error);
@@ -75,8 +102,26 @@
                   loadCardData(officialName);
               }
           }
-      }
-      );
+      },
+      "json",
+      function(error){
+          console.log("Loading failed. Trying again...",error);
+          loadCardData(officialName);
+      });
+      // $.post("fetch.php?type=transactions&official_name="+officialName,{
+      //     publicToken: publicToken,
+      //     metadata: metaData
+      // },function(response){
+      //     console.log(response);
+      //     try {
+      //         response = $.parseJSON(response);
+      //     } catch (error){
+      //         console.log("Loading failed. Trying again...");
+      //         loadCardData(officialName);
+      //     }
+          
+      // }
+      // );
   }
 
   var handler = Plaid.create({
@@ -172,8 +217,9 @@
   $('#modal_def').on('hide.bs.modal', function (e) {
       switch(modalMode){
           case "Delete Card Feed":
-          case "Manage Card Feed":
+          case "Manage Nickname":
               $("#modal_def .modal_footer").html(modalSettings.default_footer);
+
           break;
       }
   });
@@ -187,7 +233,7 @@
           case "Delete Card Feed":
               $("#modal_text").html("Are you sure you want to do this? If so, click the \"Confirm\" button below. ");
               $("#modal_title").html("Delete Card Feed");
-              $("#modal_def .modal-footer").html("<button c_id='"+cardId+" 'class='btn btn-danger confirm-deletion'>Confirm</button>")
+              $("#modal_def .modal-footer").html("<button c_id='"+cardId+" 'class='btn btn-danger confirmm confirm-deletion'>Confirm</button>")
           break;
           case "Manage Nickname":
               nickname = $(".table-container").find(".toggle-btn").text().replace(/^[\t ]{1,}(.+)/gm,"$1");
@@ -230,16 +276,15 @@
   });
 
   $("body").on("click",".confirm-manage-nickname,.confirm-deletion",function(event){
+
       card_id = $(this).attr("c_id");
       type = $(this).is(".confirm-manage-nickname") ? "confirm_nickname" : "confirm_deletion";
       data = {card_id: card_id};
       if($(this).is(".confirm-manage-nickname")){
           data.nickname = $("#nicknamee").val();
       }
-      $.post("fetch.php?type="+type,data,function(response){
-          console.log(response);
-          response = $.parseJSON(response);
-          console.log(response);
+      quickPost("fetch.php?type="+type,data,function(response){
+          
           if(typeof response.error === "undefined"){
               switch(type){
                   case "confirm_nickname":
