@@ -16,8 +16,6 @@
                 <th title="Field #5">Amount</th>
                 </tr>*/
 
-  
-
   function updateTransactionDisplay(data){
       $("#tables").prepend(data.html);
   }
@@ -90,7 +88,6 @@
           publicToken: publicToken,
           metadata: metaData
       }, function(response){
-          console.log(response,response.total_transactions);
           if(typeof response.error !== "undefined"){
               alert(response.error);
           }else {
@@ -127,7 +124,7 @@
   var handler = Plaid.create({
     clientName: 'Abukai CC',
     countryCodes: ['US'],
-    env: 'sandbox',
+    env: env,
     key: 'a098c6bb0a982318837f9c7018573a',
     product: ['auth','transactions'],
     language: 'en',
@@ -142,7 +139,7 @@
       // user selected and the account ID or IDs, if the
       // Select Account view is enabled.
 
-      console.log("Logged into bank account successfully.",metadata);
+      console.log("Logged into bank account successfully.",metadata,public_token);
 
       if($("#bank_info").length === 0){
           $("#link-button").after('<span id="bank_info" class="alert alert-success" />');

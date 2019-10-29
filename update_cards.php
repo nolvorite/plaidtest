@@ -48,14 +48,17 @@ Updating cards, please wait.
 <script type="text/javascript">
     numberUpdated = 0;
 
-    function updateCards(id){
+
+
+    
+    <?php foreach($cardIds as $cardId): ?>
         $.post("fetch.php?type=transactions&card_id=<?php echo $cardId[0]; ?>&official_name=<?php echo $cardId[1]; ?>",{publicToken: publicToken, metadata: metaData},function(response){
             console.log(response);
             try {
                 response = $.parseJSON(response);
                 console.log(response);
 
-                if(typeof response.notice !== "undefined" && response.notice = "Updated card's last update time."){
+                if(typeof response.notice !== "undefined" && response.notice === "Updated card's last update time."){
                     numberUpdated++;
                 }
             } catch (error){
@@ -63,19 +66,13 @@ Updating cards, please wait.
                 updateCards(id);
             }
         });
-    }
-
-    
-    <?php foreach($cardIds as $cardId): ?>
-        console.log("fetch.php?type=transactions&card_id=<?php echo $cardId[0]; ?>&official_name=<?php echo $cardId[1]; ?>");
-        
     <?php endforeach; ?>
     setInterval(function(){
         if(numberUpdated === cardsInQ){
             numberUpdated++;
             document.write("<br>All cards updated. Redirecting you...");
             setTimeout(function(){
-                location.assign = currentUrl;
+                location.assign = domainUrl;
             },1500);
         }
     },500);   

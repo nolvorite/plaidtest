@@ -6,23 +6,31 @@
 
 	$publicToken = $_POST['publicToken'];
 
-    $properties1 = [
-        'institution_id' => $_POST['metadata']['institution']['institution_id'],
-        'public_key' => $publicKey,
-        'initial_products' => ['transactions', 'auth']
-    ];
+	$publicToken2 = $publicToken;
 
-	/////////////////////
-	//public key part 1//
-	/////////////////////
+	if($env === "'.$env.'"){
 
-	$publicTokenDt = cUrlQuick($properties1,'https://sandbox.plaid.com/sandbox/public_token/create');
+	    $properties1 = [
+	        'institution_id' => $_POST['metadata']['institution']['institution_id'],
+	        'public_key' => $publicKey,
+	        'initial_products' => ['transactions', 'auth']
+	    ];
 
-	$publicToken2 = $publicTokenDt['public_token'];	
+		/////////////////////
+		//public key part 1//
+		/////////////////////
+
+		$publicTokenDt = cUrlQuick($properties1,'https://'.$env.'.plaid.com/'.$env.'/public_token/create');
+
+		$publicToken2 = $publicTokenDt['public_token'];	
+
+	}
 
 	///////////////////
 	//exchange tokens//
 	///////////////////
+
+
 
 	$properties2 = [
 		'client_id' => $clientId,
@@ -30,7 +38,9 @@
 		'public_token' => $publicToken2
 	];
 
-	$accessTokenData = cUrlQuick($properties2,'https://sandbox.plaid.com/item/public_token/exchange');
+	//$accessTokenData = cUrlQuick($properties2,'https://'.$env.'.plaid.com/item/public_token/exchange');
+
+	$accessTokenData = ['access_token' => 'access-development-60ff44f2-5109-4971-a116-2403b01dd94d'];
 
 	////////////////////////////////
 	//finally get transactions lol//
@@ -45,7 +55,7 @@
 	];
 
 
-	$result = cUrlQuick($properties3,'https://sandbox.plaid.com/transactions/get');
+	$result = cUrlQuick($properties3,'https://'.$env.'.plaid.com/transactions/get');
 
 	if(isset($result['accounts'])){ //really need a better criteria for success lol
 
@@ -107,7 +117,7 @@
 
 
 
-			$result = cUrlQuick($properties4,'https://sandbox.plaid.com/transactions/get');
+			$result = cUrlQuick($properties4,'https://'.$env.'.plaid.com/transactions/get');
 
 			if(isset($result['accounts'])){
 
@@ -131,8 +141,20 @@
 					}
 				}
 
-				if($alreadySelected && !isset($_GET['card_id'])){
-					$result = ['error' => 'Card is already in your card feed. Please select another one.'];
+
+				$condition1 = $alreadySelected && !isset($_GET['card_id']); //check if card is already in a card feed
+
+				$condition2 = count($cardList) === 3; //3 is max number of cards
+
+				if($condition1 || $condition2){
+
+					$errors = "";
+
+					if($condition1){ $errors .= 'Card is already in your card feed. Please select another one.';}
+					if($condition2){ $errors .= "\nYou already have a maximum number of cards in your card feed. Please delete a card feed.";}
+
+					$result = ['error' => $errors];
+
 				}else{
 					//update card data for use
 

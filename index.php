@@ -19,7 +19,7 @@
     }
 
     if($needsUpdates){ 
-        //header("Location: update_cards.php");
+        header("Location: update_cards.php");
     }else {
 
     ///////////
@@ -147,6 +147,7 @@
 
     <script src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>
     <script type="text/javascript">
+        var env = '<?php echo $env; ?>';
         var publicToken = "<?php if(isset($_SESSION['public_token'])){ echo $_SESSION['public_token']; }?>";
         <?php if(isset($_SESSION['metadata'])){ ?>
         var metaData = $.parseJSON('<?php echo json_encode($_SESSION['metadata']); ?>');

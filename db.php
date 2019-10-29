@@ -6,9 +6,13 @@
 
     $dbCon = mysqli_connect("localhost","root","","plaidtest");
 
-    $clientId = '5d95f5c8c08af900131e573c';
-    $secret = 'aa4848a29c00fb894ffa43b43874d3';
+    $env = 'development';
+
+    $clientId = '5bcf2ebae188cf0013527c9c'; //'5d95f5c8c08af900131e573c';
+    $secret = ($env === 'sandbox') ? 'aa4848a29c00fb894ffa43b43874d3' : '605f6745c0b64d2e2f86b92deea33f';//'784086cf20dde185d2e11d0fcfc896';
     $publicKey = 'a098c6bb0a982318837f9c7018573a';
+
+    $_SESSION['public_token'] = 'access-development-60ff44f2-5109-4971-a116-2403b01dd94d';
 
     function filterQ($value){
         global $dbCon;
