@@ -18,9 +18,9 @@
         $needsUpdates = (microtime(true) - $lastUpdated >= (60 * 60 * 24)) ? true : $needsUpdates;
     }
 
-    if($needsUpdates){ 
-        header("Location: update_cards.php");
-    }else {
+    // if($needsUpdates){ 
+    //     header("Location: update_cards.php");
+    // }else {
 
     ///////////
 
@@ -161,4 +161,4 @@
 
   </body>
 </html>
-<?php } ?>
+<?php //} ?>

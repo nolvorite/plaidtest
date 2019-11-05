@@ -18,6 +18,7 @@
         //everything updated before 1 day will be updated
 
         //as defined:
+        
         $siteUrl = "https://localhost/plaidtest/";
         $cardIds = [];
 
@@ -28,7 +29,6 @@
                 $cardIds[count($cardIds)] = [$cardz['card_id'],$cardz['official_name']];
             }
         }
-
     }
 
 ?>
